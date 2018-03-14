@@ -1,0 +1,9 @@
+Getting Started in Linux
+wget https://bitbucket.org/atlas0fd00m/rfcat/downloads/rfcat_150225.tgz
+tar zxvf rfcat_150225.tgz
+cd rfcat_150225
+sudo apt-get install python-usb or us pip install pyusb
+sudo python setup.py install
+sudo rfcat -r
+
+dnf install PyQt5
