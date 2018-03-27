@@ -4,10 +4,11 @@ import os
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5 import QtCore
-import listenerworker,jamworker
+import listenerworker,jamworker, rollingworker
 import threading
 import readline
 import rlcompleter
+import time
 readline.parse_and_bind("tab: complete")
 from rflib import *
 
@@ -18,8 +19,8 @@ from rflib import *
 #frequency = 314350000
 baudRate = 4800
 FSK2 = "MOD_2FSK"
-bandwidth = 24000
-
+chanWidth = 24000
+chanBW = 70000
 
 class Display(QWidget):
 
@@ -28,6 +29,7 @@ class Display(QWidget):
         self.allowListening = True
         self.initUI()
     def initUI(self):
+        self.fileName = "waves.txt"
         self.setFixedSize(1000, 500)
         self.setWindowTitle('RF Spoofer')
         #label = QLabel('RF Spoofer')
@@ -39,7 +41,7 @@ class Display(QWidget):
         self.jamButton = QPushButton('Jam', self)
         self.stopButton = QPushButton('Stop', self)
         self.exitButton = QPushButton('Exit', self)
-
+        self.rollingButton = QPushButton('Rolling Attack', self)
         self.testButton.setStyleSheet("background-color:green")
         self.jamButton.setStyleSheet("background-color:orange")
         self.exitButton.setStyleSheet("background-color: red")
@@ -49,13 +51,14 @@ class Display(QWidget):
         self.listenButton.setEnabled(False)
         self.sendButton.setEnabled(False)
         self.jamButton.setEnabled(False)
+        self.rollingButton.setEnabled(False)
 
         self.testButton.clicked.connect(self.handleButtonTest)
         self.exitButton.clicked.connect(self.closeEvent)
         self.listenButton.clicked.connect(self.handleButtonListen)
         self.stopButton.clicked.connect(self.handleButtonStop)
         self.jamButton.clicked.connect(self.handleButtonJam)
-
+        self.rollingButton.clicked.connect(self.handleButtonRolling)
 
         self.modLabel = QLabel('Modulation:')
         layout.addWidget(self.modLabel,2,5)
@@ -110,6 +113,7 @@ class Display(QWidget):
         layout.addWidget(self.sendButton,19,2)
         layout.addWidget(self.jamButton,19,3)
         layout.addWidget(self.stopButton,19,4)
+        layout.addWidget(self.rollingButton,19,5)
         layout.addWidget(self.exitButton,19,6)
 
         #layout.setColumnStretch(0, 1)
@@ -118,6 +122,7 @@ class Display(QWidget):
         #layout.setRowStretch(1, 1)
         #layout.setAlignment(Qt.AlignRight)
         self.setLayout(layout)
+
 
     def handleButtonFile(self):
         options = QFileDialog.Options()
@@ -132,18 +137,10 @@ class Display(QWidget):
 
         #Force update GUI
         app.processEvents()
+        frequency = int(self.frequencyLine.text())
 
         try:
-            frequency = int(self.frequencyLine.text())
-            self.dongle= RfCat()
-            self.dongle.setFreq(frequency)
-            self.dongle.setMdmModulation(MOD_2FSK)
-            self.dongle.setMdmDRate(baudRate)
-            self.dongle.setMaxPower()
-            self.dongle.lowball()
-            self.dongle.makePktFLEN(255)
-            self.dongle.setChannel(0)
-
+            self.initDongle(2,frequency)
         except (ChipconUsbTimeoutException):
             self.text.append('Timd out... try again later')
             return
@@ -153,17 +150,104 @@ class Display(QWidget):
             return
         self.text.append("Initializing succesful:")
 
-
+        self.text.append("Dongle 1:")
         self.text.append(self.dongle.reprHardwareConfig())
         self.text.append(self.dongle.reprSoftwareConfig())
         self.text.append(self.dongle.reprMdmModulation())
         self.text.append(self.dongle.reprFreqConfig())
         self.text.append(self.dongle.reprModemConfig() + "\n")
+        try:
+            self.text.append("Dongle 2:")
+            self.text.append(self.dongle2.reprHardwareConfig())
+            self.text.append(self.dongle2.reprSoftwareConfig())
+            self.text.append(self.dongle2.reprMdmModulation())
+            self.text.append(self.dongle2.reprFreqConfig())
+            self.text.append(self.dongle2.reprModemConfig() + "\n")
+        except:
+            pass
 
         self.listenButton.setEnabled(True)
         self.sendButton.setEnabled(True)
         self.jamButton.setEnabled(True)
         self.stopButton.setEnabled(True)
+        self.rollingButton.setEnabled(True)
+
+    def initDongle(self,numOfDongles,freq):
+        self.numOfDongles = numOfDongles
+        if numOfDongles==1:
+            self.dongle= RfCat()
+            self.dongle.setFreq(freq)
+            self.dongle.setMdmModulation(MOD_2FSK)
+            self.dongle.setMdmDRate(baudRate)
+            self.dongle.setMaxPower()
+            self.dongle.lowball(1)
+            self.dongle.makePktFLEN(255)
+            self.dongle.setChannel(0)
+        else:
+            try:
+                self.dongle= RfCat(idx=0)
+                self.dongle.setFreq(freq)
+                self.dongle.setMdmModulation(MOD_2FSK)
+                self.dongle.setMdmDRate(baudRate)
+                self.dongle.setMaxPower()
+                self.dongle.lowball(1)
+                self.dongle.setMdmChanBW(chanBW)
+                self.dongle.setMdmChanSpc(chanWidth)
+                self.dongle.makePktFLEN(255)
+                self.dongle.setChannel(0)
+            except Exception as e :
+                #print(str(e))
+                self.text.append("Error in setting up usb1")
+                self.text.append(str(e))
+                #print ('index out of range')
+                pass
+
+                #time.sleep(2)
+            try:
+                self.dongle2= RfCat(idx=1)
+                self.dongle2.setFreq(freq -10000000)
+                self.dongle2.setMdmModulation(MOD_2FSK)
+                self.dongle2.setMdmDRate(baudRate)
+                self.dongle2.setMaxPower()
+                self.dongle2.lowball(1)
+                self.dongle2.setMdmChanBW(chanBW)
+                self.dongle2.setMdmChanSpc(chanWidth)
+                self.dongle2.makePktFLEN(255)
+                self.dongle2.setChannel(0)
+            except Exception as e :
+                #print(str(e))
+                self.text.append("error in setting up usb2")
+                self.text.append(str(e))
+                #print ('index out of range')
+                pass
+
+
+    def handleButtonRolling(self):
+        self.objRoll = rollingworker.RollingWorker(self.dongle)
+        self.thread = QThread()
+
+        self.objRoll.messageReady.connect(self.rollingMessageReady)
+        self.objRoll.jamStart.connect(self.jamStartReady)
+        self.objRoll.jamStop.connect(self.jamStopReady)
+
+        self.objRoll.moveToThread(self.thread)
+        self.objRoll.finished.connect(self.thread.quit)
+
+        self.thread.started.connect(self.objRoll.procListen)
+        self.thread.start()
+
+
+        self.objJam = jamworker.JamWorker(self.dongle2)
+        self.jamThread = QThread()
+
+        self.objJam.jamMessageReady.connect(self.onMessageReady)
+
+        self.objJam.moveToThread(self.jamThread)
+        self.objJam.finished.connect(self.jamThread.quit)
+
+        self.jamThread.started.connect(self.objJam.procJam)
+        self.jamThread.start()
+
 
     #Thread handle
     def handleButtonListen(self):
@@ -194,6 +278,45 @@ class Display(QWidget):
 
         self.jamThread.started.connect(self.objJam.procJam)
         self.jamThread.start()
+
+
+    def rollingMessageReady(self,msg):
+        self.text.append(msg + "rolling")
+        self.saveToFile(self.fileName,msg)
+
+    def rollingStopJamming(self,msg):
+        self.text.append("Stopping jamming....")
+        #self.saveToFile(self.fileName,msg)
+        try:
+            QtCore.QMetaObject.invokeMethod(self.objJam, 'stopJam', Qt.DirectConnection)
+        #Thread didn't start, therefore object does not exist
+        except(AttributeError):
+            pass
+        #self.allowListening = False
+
+
+    def jamStartReady(self,msg):
+        print("starting jam again")
+
+        self.text.append(msg + "rolling")
+        try:
+            QtCore.QMetaObject.invokeMethod(self.objJam, 'procJam', Qt.DirectConnection)
+        #Thread didn't start, therefore object does not exist
+        except(AttributeError):
+            pass
+        #self.allowListening = False
+
+
+    def jamStopReady(self,msg):
+        print("starting jam stop Ready")
+
+        self.text.append(msg + "starting jam stop Ready")
+        try:
+            QtCore.QMetaObject.invokeMethod(self.objJam, 'stopJam', Qt.DirectConnection)
+        #Thread didn't start, therefore object does not exist
+        except(AttributeError):
+            pass
+        #self.allowListening = False
 
 
     def onMessageReady(self, msg):
@@ -235,8 +358,10 @@ class Display(QWidget):
     def closeEvent(self, event):
         try:
             self.dongle.setModeIDLE()
+            self.dongle2.setModeIDLE()
         #If no dongle binded
         except:
+            self.dongle.setModeIDLE()
             print(event)
             pass
         self.close()
