@@ -1,6 +1,7 @@
     # worker.py
 from PyQt5.QtCore import QThread, QObject, pyqtSignal, pyqtSlot
 from PyQt5 import QtCore
+import os
 import time
 from rflib import *
 
@@ -11,6 +12,7 @@ class ListenerWorker(QObject, RfCat):
         self.dongle = Rfcat
     finished = pyqtSignal()
     messageReady = pyqtSignal(str)
+    saveReady= pyqtSignal(str)
 
     @pyqtSlot()
     def procListen(self): # A slot takes no params
@@ -27,9 +29,11 @@ class ListenerWorker(QObject, RfCat):
                 if strength > -100:
                     print("packet received")
                     pktcounter+=1
-                    msg = "Packet: " + str(pktcounter) + ", Signal Strength: " + str(strength) + ", Transmission : " + str(hexdata) + ", ASCII: " +  makeFriendlyAscii(rawdata) +'\n'
+                    msg = "Packet: " + str(pktcounter) + ", Signal Strength: " + str(strength) + ", Transmission: " + str(hexdata) + ", ASCII: " +  makeFriendlyAscii(rawdata) + os.linesep
                     capturedPackets.append(hexdata)
                     self.messageReady.emit(msg)
+                    saveMsg = str(pktcounter) + ', ' + str(hexdata) + os.linesep
+                    self.saveReady.emit(saveMsg)
                 #Force update GUI
                 #app.processEvents()
 

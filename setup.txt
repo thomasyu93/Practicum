@@ -7,3 +7,7 @@ sudo python setup.py install
 sudo rfcat -r
 
 dnf install PyQt5
+dnf install mongodb mongodb-server
+dnf install mongodb
+pip install pymongo
+pip install dnspython

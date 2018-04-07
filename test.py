@@ -148,7 +148,7 @@ class Display(QWidget):
         frequency = int(self.frequencyLine.text())
 
         try:
-            self.initDongle(2,frequency)
+            self.initDongle(1,frequency)
         except (ChipconUsbTimeoutException):
             self.text.append('Timd out... try again later')
             return
@@ -267,6 +267,7 @@ class Display(QWidget):
         self.thread = QThread()
 
         self.obj.messageReady.connect(self.onMessageReady)
+        self.obj.saveReady.connect(self.onSaveReady)
 
         self.obj.moveToThread(self.thread)
         self.obj.finished.connect(self.thread.quit)
@@ -330,6 +331,9 @@ class Display(QWidget):
 
     def onMessageReady(self, msg):
         self.text.append(msg)
+        #self.saveToFile(self.fileName,msg)
+
+    def onSaveReady(self,msg):
         self.saveToFile(self.fileName,msg)
 
     def handleButtonStop(self):
