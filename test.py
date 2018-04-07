@@ -4,6 +4,8 @@ import os
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5 import QtCore
+from pymongo import MongoClient
+from pprint import pprint
 import listenerworker,jamworker, rollingworker
 import threading
 import readline
@@ -28,6 +30,7 @@ class Display(QWidget):
         super(Display, self).__init__()
         self.allowListening = True
         self.initUI()
+        self.initConnection()
     def initUI(self):
         self.fileName = "waves.txt"
         self.setFixedSize(1000, 500)
@@ -123,6 +126,11 @@ class Display(QWidget):
         #layout.setAlignment(Qt.AlignRight)
         self.setLayout(layout)
 
+    def initConnection(self):
+        client = MongoClient('mongodb+srv://admin:admin@cluster0-ogebj.mongodb.net/test')
+        self.db=client.RF
+        serverStatusResult=self.db.command("serverStatus")
+        pprint(serverStatusResult)
 
     def handleButtonFile(self):
         options = QFileDialog.Options()
@@ -265,6 +273,7 @@ class Display(QWidget):
 
         self.thread.started.connect(self.obj.procListen)
         self.thread.start()
+        self.text.append("starting listener")
 
     def handleButtonJam(self):
 

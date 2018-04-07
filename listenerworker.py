@@ -18,7 +18,6 @@ class ListenerWorker(QObject, RfCat):
         self.Listening = True
         capturedPackets = []
         pktcounter = 0
-        self.messageReady.emit("Listening...\n")
         while self.Listening:
             try:
                 rawdata, t = self.dongle.RFrecv(1)
@@ -28,7 +27,7 @@ class ListenerWorker(QObject, RfCat):
                 if strength > -100:
                     print("packet received")
                     pktcounter+=1
-                    msg = "Packet: " + str(pktcounter) + " with Signal Strength:" + str(strength) + "with signal: " + str(hexdata) + "|| ASCII: " +  makeFriendlyAscii(rawdata) +'\n'
+                    msg = "Packet: " + str(pktcounter) + ", Signal Strength: " + str(strength) + ", Transmission : " + str(hexdata) + ", ASCII: " +  makeFriendlyAscii(rawdata) +'\n'
                     capturedPackets.append(hexdata)
                     self.messageReady.emit(msg)
                 #Force update GUI

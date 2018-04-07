@@ -30,7 +30,7 @@ class RollingWorker(QObject, RfCat):
                 if strength > -100:
                     print("packet received")
                     pktcounter+=1
-                    msg = "Packet: " + str(pktcounter) + " with Signal Strength:" + str(strength) + "with signal: " + str(hexdata) + "|| ASCII: " +  makeFriendlyAscii(rawdata) +'\n'
+                    msg = "Packet: " + str(pktcounter) + ", with Signal Strength:" + str(strength) + ", with signal: " + str(hexdata) + " , ASCII: " +  makeFriendlyAscii(rawdata) +'\n'
                     capturedPackets.append(hexdata)
                     self.messageReady.emit(msg)
                 #Force update GUI
