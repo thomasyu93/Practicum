@@ -1,0 +1,50 @@
+from pymongo import MongoClient
+# pprint library is used to make the output look more pretty
+from pprint import pprint
+# connect to MongoDB, change the << MONGODB URL >> to reflect your own connection string
+
+
+def getFromFile():
+    mytransmits = []
+    with open('waves.txt') as f:
+        for line in f:
+            line=line.split(',')
+
+            mytransmits.append(line)
+    return mytransmits
+'''
+    for val in mytransmits:
+        print(val[1].rstrip())
+'''
+
+def initConnection():
+    client = MongoClient('mongodb://admin:admin@ds241019.mlab.com:41019/practicum')
+    db=client.practicum
+    return db.transmissions
+
+def getMaxId(collection):
+    maxID = collection.find_one(sort=[("idnum", -1)])["idnum"]
+    return maxID
+
+def insertTransmission(collection, transmits):
+    curMax = getMaxId(collection)
+    newMax = curMax+1
+    for vals in transmits:
+        transmission ={
+        'idnum' : newMax,
+        'pktnum' : vals[0],
+        'tData' : vals[1].rstrip()
+        }
+        results = collection.insert_one(transmission)
+    print("insert complete")
+
+def getTransmissions(collection, id):
+    results = collection.find( { "idnum":id})
+    for val in results:
+        print (val["tData"])
+    return results
+
+collection = initConnection()
+transmits = getFromFile()
+insertTransmission(collection,transmits)
+getTransmissions(collection,6)

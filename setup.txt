@@ -11,3 +11,4 @@ dnf install mongodb mongodb-server
 dnf install mongodb
 pip install pymongo
 pip install dnspython
+pip install bitstring
