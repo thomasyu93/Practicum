@@ -6,7 +6,8 @@ from PyQt5.QtCore import *
 from PyQt5 import QtCore
 from pymongo import MongoClient
 from pprint import pprint
-import listenerworker,jamworker, rollingworker
+from mongoAPI import *
+import listenerworker,jamworker, rollingworker, transmitworker
 import threading
 import readline
 import rlcompleter
@@ -45,6 +46,7 @@ class Display(QWidget):
         self.stopButton = QPushButton('Stop', self)
         self.exitButton = QPushButton('Exit', self)
         self.rollingButton = QPushButton('Rolling Attack', self)
+        self.replayButton = QPushButton('Replay File', self)
         self.testButton.setStyleSheet("background-color:green")
         self.jamButton.setStyleSheet("background-color:orange")
         self.exitButton.setStyleSheet("background-color: red")
@@ -55,6 +57,7 @@ class Display(QWidget):
         self.sendButton.setEnabled(False)
         self.jamButton.setEnabled(False)
         self.rollingButton.setEnabled(False)
+        self.replayButton.setEnabled(False)
 
         self.testButton.clicked.connect(self.handleButtonTest)
         self.exitButton.clicked.connect(self.closeEvent)
@@ -62,6 +65,7 @@ class Display(QWidget):
         self.stopButton.clicked.connect(self.handleButtonStop)
         self.jamButton.clicked.connect(self.handleButtonJam)
         self.rollingButton.clicked.connect(self.handleButtonRolling)
+        self.replayButton.clicked.connect(self.handleButtonReplay)
 
         self.modLabel = QLabel('Modulation:')
         layout.addWidget(self.modLabel,2,5)
@@ -117,6 +121,7 @@ class Display(QWidget):
         layout.addWidget(self.jamButton,19,3)
         layout.addWidget(self.stopButton,19,4)
         layout.addWidget(self.rollingButton,19,5)
+        layout.addWidget(self.replayButton,18,5)
         layout.addWidget(self.exitButton,19,6)
 
         #layout.setColumnStretch(0, 1)
@@ -131,6 +136,27 @@ class Display(QWidget):
         self.db=client.RF
         serverStatusResult=self.db.command("serverStatus")
         pprint(serverStatusResult)
+    def handleButtonReplay(self):
+        fileTransmits = getFromFile(self.fileName)
+        rawTransmits = []
+        for transmit in fileTransmits:
+            rawTransmits.append(transmit[1].rstrip())
+            #print(transmit[1].rstrip())
+        
+
+        self.repObj = transmitworker.TransmitWorker(self.dongle, rawTransmits)
+        self.thread = QThread()
+
+        self.repObj.messageReady.connect(self.onMessageReady)
+
+        self.repObj.moveToThread(self.thread)
+        self.repObj.finished.connect(self.thread.quit)
+
+        self.thread.started.connect(self.repObj.procTransmit)
+        self.thread.start()
+        self.text.append("starting sending...")
+
+
 
     def handleButtonFile(self):
         options = QFileDialog.Options()
@@ -148,7 +174,7 @@ class Display(QWidget):
         frequency = int(self.frequencyLine.text())
 
         try:
-            self.initDongle(2,frequency)
+            self.initDongle(1,frequency)
         except (ChipconUsbTimeoutException):
             self.text.append('Timd out... try again later')
             return
@@ -179,6 +205,7 @@ class Display(QWidget):
         self.jamButton.setEnabled(True)
         self.stopButton.setEnabled(True)
         self.rollingButton.setEnabled(True)
+        self.replayButton.setEnabled(True)
 
     def initDongle(self,numOfDongles,freq):
         self.numOfDongles = numOfDongles
@@ -239,8 +266,12 @@ class Display(QWidget):
         self.thread = QThread()
 
         self.objRoll.messageReady.connect(self.rollingMessageReady)
+        self.objRoll.saveReady.connect(self.onSaveReady)
+
+
         self.objRoll.jamStart.connect(self.jamStartReady)
         self.objRoll.jamStop.connect(self.jamStopReady)
+
 
         self.objRoll.moveToThread(self.thread)
         self.objRoll.finished.connect(self.thread.quit)
@@ -296,7 +327,7 @@ class Display(QWidget):
 
     def rollingMessageReady(self,msg):
         self.text.append(msg + "rolling")
-        self.saveToFile(self.fileName,msg)
+
 
     def rollingStopJamming(self,msg):
         self.text.append("Stopping jamming....")

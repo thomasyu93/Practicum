@@ -4,9 +4,9 @@ from pprint import pprint
 # connect to MongoDB, change the << MONGODB URL >> to reflect your own connection string
 
 
-def getFromFile():
+def getFromFile(fileName):
     mytransmits = []
-    with open('waves.txt') as f:
+    with open(fileName) as f:
         for line in f:
             line=line.split(',')
 
@@ -44,7 +44,9 @@ def getTransmissions(collection, id):
         print (val["tData"])
     return results
 
+'''
 collection = initConnection()
-transmits = getFromFile()
+transmits = getFromFile("waves.txt")
 insertTransmission(collection,transmits)
 getTransmissions(collection,6)
+'''

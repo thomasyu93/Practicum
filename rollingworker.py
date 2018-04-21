@@ -3,6 +3,7 @@ from PyQt5.QtCore import QThread, QObject, pyqtSignal, pyqtSlot
 from PyQt5 import QtCore
 import time
 import bitstring
+import os
 from rflib import *
 
 
@@ -12,6 +13,7 @@ class RollingWorker(QObject, RfCat):
         self.dongle = Rfcat
     finished = pyqtSignal()
     messageReady = pyqtSignal(str)
+    saveReady= pyqtSignal(str)
     jamStart = pyqtSignal(str)
     jamStop = pyqtSignal(str)
     @pyqtSlot()
@@ -33,6 +35,10 @@ class RollingWorker(QObject, RfCat):
                     msg = "Packet: " + str(pktcounter) + ", with Signal Strength:" + str(strength) + ", with signal: " + str(hexdata) + " , ASCII: " +  makeFriendlyAscii(rawdata) +'\n'
                     capturedPackets.append(hexdata)
                     self.messageReady.emit(msg)
+                    saveMsg = str(pktcounter) + ', ' + str(hexdata) + os.linesep
+                    self.saveReady.emit(saveMsg)
+
+
                 #Force update GUI
                 #app.processEvents()
                 ''' 
