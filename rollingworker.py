@@ -35,6 +35,7 @@ class RollingWorker(QObject, RfCat):
                     self.messageReady.emit(msg)
                 #Force update GUI
                 #app.processEvents()
+                ''' 
                     if pktcounter > 1:
                         time.sleep(0.5)
                         self.jamStop.emit("")
@@ -44,6 +45,7 @@ class RollingWorker(QObject, RfCat):
                         self.dongle.RFxmit(bytePacket)
                         self.jamStart.emit("")
 
+                '''
             except (KeyboardInterrupt):
                 break
             except (ChipconUsbTimeoutException):

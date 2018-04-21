@@ -30,7 +30,7 @@ class Display(QWidget):
         super(Display, self).__init__()
         self.allowListening = True
         self.initUI()
-        self.initConnection()
+        #self.initConnection()
     def initUI(self):
         self.fileName = "waves.txt"
         self.setFixedSize(1000, 500)
@@ -148,7 +148,7 @@ class Display(QWidget):
         frequency = int(self.frequencyLine.text())
 
         try:
-            self.initDongle(1,frequency)
+            self.initDongle(2,frequency)
         except (ChipconUsbTimeoutException):
             self.text.append('Timd out... try again later')
             return
@@ -193,6 +193,7 @@ class Display(QWidget):
             self.dongle.setChannel(0)
         else:
             try:
+                #Listen Dongle
                 self.dongle= RfCat(idx=0)
                 self.dongle.setFreq(freq)
                 self.dongle.setMdmModulation(MOD_2FSK)
@@ -212,11 +213,14 @@ class Display(QWidget):
 
                 #time.sleep(2)
             try:
+                #Jam dongle 
+                jamFreq = freq + 500000
                 self.dongle2= RfCat(idx=1)
-                self.dongle2.setFreq(freq -10000000)
+                self.dongle2.setFreq(jamFreq)
                 self.dongle2.setMdmModulation(MOD_2FSK)
                 self.dongle2.setMdmDRate(baudRate)
-                self.dongle2.setMaxPower()
+                #self.dongle2.setMaxPower()
+                self.dongle2.setPower(100)
                 self.dongle2.lowball(1)
                 self.dongle2.setMdmChanBW(chanBW)
                 self.dongle2.setMdmChanSpc(chanWidth)
