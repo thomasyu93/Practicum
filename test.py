@@ -31,7 +31,7 @@ class Display(QWidget):
         super(Display, self).__init__()
         self.allowListening = True
         self.initUI()
-        #self.initConnection()
+        self.initConnection()
     def initUI(self):
         self.fileName = "waves.txt"
         self.setFixedSize(1000, 500)
@@ -46,7 +46,7 @@ class Display(QWidget):
         self.stopButton = QPushButton('Stop', self)
         self.exitButton = QPushButton('Exit', self)
         self.rollingButton = QPushButton('Rolling Attack', self)
-        self.replayButton = QPushButton('Replay File', self)
+        self.ListButton = QPushButton('Database List', self)
         self.testButton.setStyleSheet("background-color:green")
         self.jamButton.setStyleSheet("background-color:orange")
         self.exitButton.setStyleSheet("background-color: red")
@@ -57,7 +57,7 @@ class Display(QWidget):
         self.sendButton.setEnabled(False)
         self.jamButton.setEnabled(False)
         self.rollingButton.setEnabled(False)
-        self.replayButton.setEnabled(False)
+        self.ListButton.setEnabled(False)
 
         self.testButton.clicked.connect(self.handleButtonTest)
         self.exitButton.clicked.connect(self.closeEvent)
@@ -65,7 +65,8 @@ class Display(QWidget):
         self.stopButton.clicked.connect(self.handleButtonStop)
         self.jamButton.clicked.connect(self.handleButtonJam)
         self.rollingButton.clicked.connect(self.handleButtonRolling)
-        self.replayButton.clicked.connect(self.handleButtonReplay)
+        self.sendButton.clicked.connect(self.handleButtonSend)
+        self.ListButton.clicked.connect(self.handleButtonList)
 
         self.modLabel = QLabel('Modulation:')
         layout.addWidget(self.modLabel,2,5)
@@ -121,7 +122,7 @@ class Display(QWidget):
         layout.addWidget(self.jamButton,19,3)
         layout.addWidget(self.stopButton,19,4)
         layout.addWidget(self.rollingButton,19,5)
-        layout.addWidget(self.replayButton,18,5)
+        layout.addWidget(self.ListButton,18,5)
         layout.addWidget(self.exitButton,19,6)
 
         #layout.setColumnStretch(0, 1)
@@ -131,12 +132,16 @@ class Display(QWidget):
         #layout.setAlignment(Qt.AlignRight)
         self.setLayout(layout)
 
+    @staticmethod
+    def get_data(self):
+        
+
     def initConnection(self):
-        client = MongoClient('mongodb+srv://admin:admin@cluster0-ogebj.mongodb.net/test')
-        self.db=client.RF
-        serverStatusResult=self.db.command("serverStatus")
-        pprint(serverStatusResult)
-    def handleButtonReplay(self):
+        client = MongoClient('mongodb://admin:admin@ds241019.mlab.com:41019/practicum')
+        db=client.practicum
+        self.transmissions = db.transmissions
+
+    def handleButtonSend(self):
         fileTransmits = getFromFile(self.fileName)
         rawTransmits = []
         for transmit in fileTransmits:
@@ -157,6 +162,11 @@ class Display(QWidget):
         self.text.append("starting sending...")
 
 
+    def handleButtonList(self):
+        results = getAllTransmissions(self.transmissions)
+        for res in results:
+            msg = "ID : " + str(res["idnum"]) + " pktnum: " + str(res["pktnum"]) + " tdata: " +  str(res["tData"])
+            self.text.append(msg)
 
     def handleButtonFile(self):
         options = QFileDialog.Options()
@@ -174,7 +184,7 @@ class Display(QWidget):
         frequency = int(self.frequencyLine.text())
 
         try:
-            self.initDongle(1,frequency)
+            self.initDongle(2,frequency)
         except (ChipconUsbTimeoutException):
             self.text.append('Timd out... try again later')
             return
@@ -205,7 +215,7 @@ class Display(QWidget):
         self.jamButton.setEnabled(True)
         self.stopButton.setEnabled(True)
         self.rollingButton.setEnabled(True)
-        self.replayButton.setEnabled(True)
+        self.ListButton.setEnabled(True)
 
     def initDongle(self,numOfDongles,freq):
         self.numOfDongles = numOfDongles
@@ -241,13 +251,13 @@ class Display(QWidget):
                 #time.sleep(2)
             try:
                 #Jam dongle 
-                jamFreq = freq + 500000
+                jamFreq = freq - 400000
                 self.dongle2= RfCat(idx=1)
                 self.dongle2.setFreq(jamFreq)
                 self.dongle2.setMdmModulation(MOD_2FSK)
                 self.dongle2.setMdmDRate(baudRate)
                 #self.dongle2.setMaxPower()
-                self.dongle2.setPower(100)
+                self.dongle2.setPower(50)
                 self.dongle2.lowball(1)
                 self.dongle2.setMdmChanBW(chanBW)
                 self.dongle2.setMdmChanSpc(chanWidth)
@@ -379,6 +389,13 @@ class Display(QWidget):
         #Thread didn't start, therefore object does not exist
         except(AttributeError):
             pass
+        
+        try:
+            QtCore.QMetaObject.invokeMethod(self.objRoll, 'stopListen', Qt.DirectConnection, Q_ARG(str, 'test'))
+        #Thread didn't start, therefore object does not exist
+        except(AttributeError):
+            pass
+
         try:
             QtCore.QMetaObject.invokeMethod(self.objJam, 'stopJam', Qt.DirectConnection)
         #Thread didn't start, therefore object does not exist

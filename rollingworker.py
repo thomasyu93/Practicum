@@ -21,7 +21,7 @@ class RollingWorker(QObject, RfCat):
 
         self.Listening = True
         capturedPackets = []
-        pktcounter = 0
+        pktcounter = 1
         #self.messageReady.emit("Listening...\n")
         while self.Listening:
             try:
@@ -29,29 +29,26 @@ class RollingWorker(QObject, RfCat):
                 hexdata = rawdata.encode('hex')
                 strength= 0 - ord(str(self.dongle.getRSSI()))
 
-                if strength > -100:
+                if strength > -100 and strength <-10:
                     print("packet received")
-                    pktcounter+=1
                     msg = "Packet: " + str(pktcounter) + ", with Signal Strength:" + str(strength) + ", with signal: " + str(hexdata) + " , ASCII: " +  makeFriendlyAscii(rawdata) +'\n'
                     capturedPackets.append(hexdata)
                     self.messageReady.emit(msg)
                     saveMsg = str(pktcounter) + ', ' + str(hexdata) + os.linesep
                     self.saveReady.emit(saveMsg)
-
+                    pktcounter+=1
 
                 #Force update GUI
                 #app.processEvents()
-                ''' 
-                    if pktcounter > 1:
+                    if pktcounter > 2:
                         time.sleep(0.5)
                         self.jamStop.emit("")
-                        print("sending packet")
-                        bytePacket = bitstring.BitArray(hex=capturedPackets[pktcounter -2]).tobytes()
+                        self.messageReady.emit("sending packet")
+                        bytePacket = bitstring.BitArray(hex=capturedPackets[pktcounter -3]).tobytes()
                         self.dongle.makePktFLEN(len(bytePacket))
                         self.dongle.RFxmit(bytePacket)
                         self.jamStart.emit("")
 
-                '''
             except (KeyboardInterrupt):
                 break
             except (ChipconUsbTimeoutException):

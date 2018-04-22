@@ -44,6 +44,13 @@ def getTransmissions(collection, id):
         print (val["tData"])
     return results
 
+def getAllTransmissions(collection):
+    results = collection.find({})
+    #for val in results:
+    #   print (val["tData"])
+    return results
+
+
 '''
 collection = initConnection()
 transmits = getFromFile("waves.txt")
