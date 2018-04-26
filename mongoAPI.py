@@ -39,10 +39,16 @@ def insertTransmission(collection, transmits):
     print("insert complete")
 
 def getTransmissions(collection, id):
-    results = collection.find( { "idnum":id})
-    for val in results:
-        print (val["tData"])
-    return results
+
+    tData = []
+    results = collection.find( { "idnum":id},{"tData":1,"_id":0})
+
+
+    for res in results:
+        tData.append(res['tData'])
+
+    print(tData)
+    return tData
 
 def getAllTransmissions(collection):
     results = collection.find({})

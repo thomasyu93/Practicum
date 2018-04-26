@@ -17,8 +17,6 @@ class TransmitWorker(QObject, RfCat):
     @pyqtSlot()
     def procTransmit(self): # A slot takes no params
         try:
-
-
             for index, transmit in enumerate(self.rawCapture):
                 transmission=bitstring.BitArray(hex=transmit).tobytes()
                 self.dongle.makePktFLEN(len(transmission))
@@ -30,4 +28,5 @@ class TransmitWorker(QObject, RfCat):
             print("finished sending")
             self.dongle.setModeIDLE()
         print("finished sending")
-        self.dongle.setModeIDLE()
+        #self.dongle.setModeIDLE()
+        self.finished.emit()

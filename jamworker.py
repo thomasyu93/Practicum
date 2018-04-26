@@ -17,7 +17,7 @@ class JamWorker(QObject, RfCat):
 
         self.Jamming = True
         self.jamMessageReady.emit("Starting Jamming...")
-        
+
         self.dongle.setModeTX()
 
         '''
@@ -38,3 +38,4 @@ class JamWorker(QObject, RfCat):
         print("stopped called")
         self.Jamming = False
         self.dongle.setModeIDLE()
+        self.finished.emit()

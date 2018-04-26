@@ -42,8 +42,8 @@ class ListenerWorker(QObject, RfCat):
             except (ChipconUsbTimeoutException):
                 pass
         print("finished")
-        self.dongle.setModeIDLE()
-
+        #self.dongle.setModeIDLE()
+        self.finished.emit()
 
     @pyqtSlot(str)
     def stopListen(self, foo):

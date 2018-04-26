@@ -144,18 +144,18 @@ class Display(QWidget):
         idnum = self.getint()
         tData = getTransmissions(self.transmissions, idnum)
 
+        if idnum:
+            self.dSendObj = transmitworker.TransmitWorker(self.dongle, tData)
+            self.thread = QThread()
 
-        self.dSendObj = transmitworker.TransmitWorker(self.dongle, tData)
-        self.thread = QThread()
+            self.dSendObj.messageReady.connect(self.onMessageReady)
+            self.dSendObj.moveToThread(self.thread)
+            self.dSendObj.finished.connect(self.thread.quit)
 
-        self.dSendObj.messageReady.connect(self.onMessageReady)
+            self.thread.started.connect(self.dSendObj.procTransmit)
+            self.thread.start()
+            self.text.append("starting sending...")
 
-        self.dSendObj.moveToThread(self.thread)
-        self.dSendObj.finished.connect(self.thread.quit)
-
-        self.thread.started.connect(self.dSendObj.procTransmit)
-        self.thread.start()
-        self.text.append("starting sending...")
 
     def getint(self):
         num,ok = QInputDialog.getInt(self,"integer input dualog","enter the ID number")
@@ -230,6 +230,7 @@ class Display(QWidget):
             self.text.append(self.dongle2.reprFreqConfig())
             self.text.append(self.dongle2.reprModemConfig() + "\n")
         except:
+            self.text.append("Dongle 2 Not Found...")
             pass
 
         self.listenButton.setEnabled(True)
@@ -343,6 +344,10 @@ class Display(QWidget):
         self.thread.started.connect(self.obj.procListen)
         self.thread.start()
         self.text.append("starting listener")
+
+
+
+
 
     def handleButtonJam(self):
 
