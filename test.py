@@ -26,7 +26,6 @@ chanWidth = 24000
 chanBW = 70000
 
 class Display(QWidget):
-
     def __init__(self):
         super(Display, self).__init__()
         self.allowListening = True
@@ -34,19 +33,20 @@ class Display(QWidget):
         self.initConnection()
     def initUI(self):
         self.fileName = "waves.txt"
-        self.setFixedSize(1000, 500)
+        self.setFixedSize(1100, 500)
         self.setWindowTitle('RF Spoofer')
         #label = QLabel('RF Spoofer')
         layout = QGridLayout()
         #layout.addWidget(label)
         self.testButton = QPushButton('Initialize', self)
         self.listenButton = QPushButton('Listen', self)
-        self.sendButton = QPushButton('Send', self)
+        self.sendButton = QPushButton('Transmit File', self)
         self.jamButton = QPushButton('Jam', self)
         self.stopButton = QPushButton('Stop', self)
         self.exitButton = QPushButton('Exit', self)
         self.rollingButton = QPushButton('Rolling Attack', self)
         self.ListButton = QPushButton('Database List', self)
+        self.DataSendButton = QPushButton('Transmit from Database ', self)
         self.testButton.setStyleSheet("background-color:green")
         self.jamButton.setStyleSheet("background-color:orange")
         self.exitButton.setStyleSheet("background-color: red")
@@ -58,6 +58,7 @@ class Display(QWidget):
         self.jamButton.setEnabled(False)
         self.rollingButton.setEnabled(False)
         self.ListButton.setEnabled(False)
+        self.DataSendButton.setEnabled(False)
 
         self.testButton.clicked.connect(self.handleButtonTest)
         self.exitButton.clicked.connect(self.closeEvent)
@@ -67,6 +68,7 @@ class Display(QWidget):
         self.rollingButton.clicked.connect(self.handleButtonRolling)
         self.sendButton.clicked.connect(self.handleButtonSend)
         self.ListButton.clicked.connect(self.handleButtonList)
+        self.DataSendButton.clicked.connect(self.handleButtonDataSend)
 
         self.modLabel = QLabel('Modulation:')
         layout.addWidget(self.modLabel,2,5)
@@ -124,6 +126,7 @@ class Display(QWidget):
         layout.addWidget(self.rollingButton,19,5)
         layout.addWidget(self.ListButton,18,5)
         layout.addWidget(self.exitButton,19,6)
+        layout.addWidget(self.DataSendButton, 19,5)
 
         #layout.setColumnStretch(0, 1)
         #layout.setColumnStretch(1, 3)
@@ -132,14 +135,32 @@ class Display(QWidget):
         #layout.setAlignment(Qt.AlignRight)
         self.setLayout(layout)
 
-    @staticmethod
-    def get_data(self):
-        
-
     def initConnection(self):
         client = MongoClient('mongodb://admin:admin@ds241019.mlab.com:41019/practicum')
         db=client.practicum
         self.transmissions = db.transmissions
+
+    def handleButtonDataSend(self):
+        idnum = self.getint()
+        tData = getTransmissions(self.transmissions, idnum)
+
+
+        self.dSendObj = transmitworker.TransmitWorker(self.dongle, tData)
+        self.thread = QThread()
+
+        self.dSendObj.messageReady.connect(self.onMessageReady)
+
+        self.dSendObj.moveToThread(self.thread)
+        self.dSendObj.finished.connect(self.thread.quit)
+
+        self.thread.started.connect(self.dSendObj.procTransmit)
+        self.thread.start()
+        self.text.append("starting sending...")
+
+    def getint(self):
+        num,ok = QInputDialog.getInt(self,"integer input dualog","enter the ID number")
+        if ok:
+            return num
 
     def handleButtonSend(self):
         fileTransmits = getFromFile(self.fileName)
@@ -147,7 +168,7 @@ class Display(QWidget):
         for transmit in fileTransmits:
             rawTransmits.append(transmit[1].rstrip())
             #print(transmit[1].rstrip())
-        
+
 
         self.repObj = transmitworker.TransmitWorker(self.dongle, rawTransmits)
         self.thread = QThread()
@@ -160,6 +181,7 @@ class Display(QWidget):
         self.thread.started.connect(self.repObj.procTransmit)
         self.thread.start()
         self.text.append("starting sending...")
+
 
 
     def handleButtonList(self):
@@ -216,6 +238,7 @@ class Display(QWidget):
         self.stopButton.setEnabled(True)
         self.rollingButton.setEnabled(True)
         self.ListButton.setEnabled(True)
+        self.DataSendButton.setEnabled(True)
 
     def initDongle(self,numOfDongles,freq):
         self.numOfDongles = numOfDongles
@@ -250,7 +273,7 @@ class Display(QWidget):
 
                 #time.sleep(2)
             try:
-                #Jam dongle 
+                #Jam dongle
                 jamFreq = freq - 400000
                 self.dongle2= RfCat(idx=1)
                 self.dongle2.setFreq(jamFreq)
@@ -389,7 +412,7 @@ class Display(QWidget):
         #Thread didn't start, therefore object does not exist
         except(AttributeError):
             pass
-        
+
         try:
             QtCore.QMetaObject.invokeMethod(self.objRoll, 'stopListen', Qt.DirectConnection, Q_ARG(str, 'test'))
         #Thread didn't start, therefore object does not exist
