@@ -16,7 +16,7 @@ class ListenerWorker(QObject, RfCat):
 
     @pyqtSlot()
     def procListen(self): # A slot takes no params
-
+        self.dongle.setRfMode(RFST_SRX)
         self.Listening = True
         capturedPackets = []
         pktcounter = 0

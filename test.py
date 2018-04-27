@@ -203,10 +203,10 @@ class Display(QWidget):
 
         #Force update GUI
         app.processEvents()
-        frequency = int(self.frequencyLine.text())
+        self.frequency = int(self.frequencyLine.text())
 
         try:
-            self.initDongle(2,frequency)
+            self.initDongle(1,self.frequency)
         except (ChipconUsbTimeoutException):
             self.text.append('Timd out... try again later')
             return
@@ -295,6 +295,62 @@ class Display(QWidget):
                 pass
 
 
+    def resetDongle(self,freq):
+
+        self.dongle.setRfMode(RFST_SRX)
+        '''
+        if self.numOfDongles==1:
+            self.dongle.lowballRestore()
+            self.dongle.setFreq(freq)
+            self.dongle.setMdmModulation(MOD_2FSK)
+            self.dongle.setMdmDRate(baudRate)
+            self.dongle.setMaxPower()
+            self.dongle.lowball(1)
+            self.dongle.makePktFLEN(255)
+            self.dongle.setChannel(0)
+        else:
+            try:
+                #Listen Dongle
+                self.dongle.lowballRestore()
+                self.dongle.setFreq(freq)
+                self.dongle.setMdmModulation(MOD_2FSK)
+                self.dongle.setMdmDRate(baudRate)
+                self.dongle.setMaxPower()
+                self.dongle.lowball(1)
+                self.dongle.setMdmChanBW(chanBW)
+                self.dongle.setMdmChanSpc(chanWidth)
+                self.dongle.makePktFLEN(255)
+                self.dongle.setChannel(0)
+            except Exception as e :
+                #print(str(e))
+                self.text.append("Error in setting up usb1")
+                self.text.append(str(e))
+                #print ('index out of range')
+                pass
+
+                #time.sleep(2)
+            try:
+                #Jam dongle
+                jamFreq = freq - 400000
+                self.dongle2.lowballRestore()
+                self.dongle2.setFreq(jamFreq)
+                self.dongle2.setMdmModulation(MOD_2FSK)
+                self.dongle2.setMdmDRate(baudRate)
+                #self.dongle2.setMaxPower()
+                self.dongle2.setPower(50)
+                self.dongle2.lowball(1)
+                self.dongle2.setMdmChanBW(chanBW)
+                self.dongle2.setMdmChanSpc(chanWidth)
+                self.dongle2.makePktFLEN(255)
+                self.dongle2.setChannel(0)
+            except Exception as e :
+                #print(str(e))
+                self.text.append("error in setting up usb2")
+                self.text.append(str(e))
+                #print ('index out of range')
+                pass
+        '''
+
     def handleButtonRolling(self):
         self.objRoll = rollingworker.RollingWorker(self.dongle)
         self.thread = QThread()
@@ -377,7 +433,6 @@ class Display(QWidget):
             pass
         #self.allowListening = False
 
-
     def jamStartReady(self,msg):
         print("starting jam again")
 
@@ -425,11 +480,18 @@ class Display(QWidget):
             pass
 
         try:
-            QtCore.QMetaObject.invokeMethod(self.objJam, 'stopJam', Qt.DirectConnection)
+            QtCore.QMetaObject.invokeMethod(self.objJam, 'finishJam', Qt.DirectConnection)
+        #Thread didn't start, therefore object does not exist
+        except(AttributeError):
+            pass
+
+        try:
+            QtCore.QMetaObject.invokeMethod(self.repObj, 'forceExit', Qt.DirectConnection)
         #Thread didn't start, therefore object does not exist
         except(AttributeError):
             pass
         #self.allowListening = False
+        #self.resetDongle(self.frequency)
 
     def radioButtonState(self,b):
         msg = b.text() + " is selected"
