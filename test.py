@@ -7,7 +7,7 @@ from PyQt5 import QtCore
 from pymongo import MongoClient
 from pprint import pprint
 from mongoAPI import *
-import listenerworker,jamworker, rollingworker, transmitworker
+import listenerworker,jamworker, rollingworker, transmitworker,bruteworker
 import threading
 import readline
 import rlcompleter
@@ -47,6 +47,8 @@ class Display(QWidget):
         self.rollingButton = QPushButton('Rolling Attack', self)
         self.ListButton = QPushButton('Database List', self)
         self.DataSendButton = QPushButton('Transmit from Database ', self)
+        self.UploadButton = QPushButton('Upload to Database ', self)
+        self.BruteButton = QPushButton('Brute Force ', self)
         self.testButton.setStyleSheet("background-color:green")
         self.jamButton.setStyleSheet("background-color:orange")
         self.exitButton.setStyleSheet("background-color: red")
@@ -59,6 +61,9 @@ class Display(QWidget):
         self.rollingButton.setEnabled(False)
         self.ListButton.setEnabled(False)
         self.DataSendButton.setEnabled(False)
+        self.UploadButton.setEnabled(False)
+        self.BruteButton.setEnabled(False)
+
 
         self.testButton.clicked.connect(self.handleButtonTest)
         self.exitButton.clicked.connect(self.closeEvent)
@@ -69,6 +74,9 @@ class Display(QWidget):
         self.sendButton.clicked.connect(self.handleButtonSend)
         self.ListButton.clicked.connect(self.handleButtonList)
         self.DataSendButton.clicked.connect(self.handleButtonDataSend)
+        self.UploadButton.clicked.connect(self.handleButtonUpload)
+        self.BruteButton.clicked.connect(self.handleButtonBrute)
+
 
         self.modLabel = QLabel('Modulation:')
         layout.addWidget(self.modLabel,2,5)
@@ -125,8 +133,11 @@ class Display(QWidget):
         layout.addWidget(self.stopButton,19,4)
         layout.addWidget(self.rollingButton,19,5)
         layout.addWidget(self.ListButton,18,5)
-        layout.addWidget(self.exitButton,19,6)
+        layout.addWidget(self.exitButton,17,6)
         layout.addWidget(self.DataSendButton, 19,5)
+        layout.addWidget(self.UploadButton, 18,6)
+        layout.addWidget(self.BruteButton, 19,6)
+
 
         #layout.setColumnStretch(0, 1)
         #layout.setColumnStretch(1, 3)
@@ -139,6 +150,35 @@ class Display(QWidget):
         client = MongoClient('mongodb://admin:admin@ds241019.mlab.com:41019/practicum')
         db=client.practicum
         self.transmissions = db.transmissions
+
+    def handleButtonUpload(self):
+        fileTransmits = getFromFile(self.fileName)
+        for transmits in fileTransmits:
+            print(transmits)
+
+        insertTransmission(self.transmissions,fileTransmits)
+        '''
+        rawTransmits = []
+        for transmit in fileTransmits:
+            rawTransmits.append(transmit[1].rstrip())
+            #print(transmit[1].rstrip())
+        '''
+        pass
+    def handleButtonBrute(self):
+        self.bruteObj = bruteworker.BruteWorker(self.dongle)
+        self.thread = QThread()
+
+        self.bruteObj.messageReady.connect(self.onMessageReady)
+        self.bruteObj.moveToThread(self.thread)
+        self.bruteObj.finished.connect(self.thread.quit)
+
+        self.thread.started.connect(self.bruteObj.procTransmit)
+        self.thread.start()
+        self.text.append("starting brute force...")
+
+
+        pass
+
 
     def handleButtonDataSend(self):
         idnum = self.getint()
@@ -240,6 +280,9 @@ class Display(QWidget):
         self.rollingButton.setEnabled(True)
         self.ListButton.setEnabled(True)
         self.DataSendButton.setEnabled(True)
+        self.UploadButton.setEnabled(True)
+        self.BruteButton.setEnabled(True)
+
 
     def initDongle(self,numOfDongles,freq):
         self.numOfDongles = numOfDongles
@@ -298,7 +341,6 @@ class Display(QWidget):
     def resetDongle(self,freq):
 
         self.dongle.setRfMode(RFST_SRX)
-        '''
         if self.numOfDongles==1:
             self.dongle.lowballRestore()
             self.dongle.setFreq(freq)
@@ -349,7 +391,6 @@ class Display(QWidget):
                 self.text.append(str(e))
                 #print ('index out of range')
                 pass
-        '''
 
     def handleButtonRolling(self):
         self.objRoll = rollingworker.RollingWorker(self.dongle)
@@ -487,6 +528,12 @@ class Display(QWidget):
 
         try:
             QtCore.QMetaObject.invokeMethod(self.repObj, 'forceExit', Qt.DirectConnection)
+        #Thread didn't start, therefore object does not exist
+        except(AttributeError):
+            pass
+        try:
+            QtCore.QMetaObject.invokeMethod(self.bruteObj, 'forceExit', Qt.DirectConnection)
+            self.resetDongle(self.frequency)
         #Thread didn't start, therefore object does not exist
         except(AttributeError):
             pass

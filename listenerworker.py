@@ -43,6 +43,7 @@ class ListenerWorker(QObject, RfCat):
                 pass
         print("finished")
         #self.dongle.setModeIDLE()
+        self.dongle.setModeRX()
         self.finished.emit()
 
     @pyqtSlot(str)

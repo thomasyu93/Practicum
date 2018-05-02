@@ -20,27 +20,6 @@ class JamWorker(QObject, RfCat):
 
         self.dongle.setModeTX()
 
-        '''
-        while self.Jamming:
-            try:
-                self.dongle.setModeTX()
-
-            except (KeyboardInterrupt):
-                break
-            except (ChipconUsbTimeoutException):
-                pass
-        self.jamMessageReady.emit("stopped Jamming")
-        self.dongle.setModeIDLE()
-        '''
-        '''
-    @pyqtSlot()
-    def stopJam(self):
-        print("stopped called")
-        self.Jamming = False
-        self.dongle.setModeIDLE()
-        self.dongle.setRfMode(RFST_SRX)
-        print("stop jamming.......")
-    '''
 
     @pyqtSlot()
     def finishJam(self):
