@@ -131,7 +131,7 @@ class Display(QWidget):
         layout.addWidget(self.sendButton,19,2)
         layout.addWidget(self.jamButton,19,3)
         layout.addWidget(self.stopButton,19,4)
-        layout.addWidget(self.rollingButton,19,5)
+        layout.addWidget(self.rollingButton,17,5)
         layout.addWidget(self.ListButton,18,5)
         layout.addWidget(self.exitButton,17,6)
         layout.addWidget(self.DataSendButton, 19,5)
@@ -246,7 +246,7 @@ class Display(QWidget):
         self.frequency = int(self.frequencyLine.text())
 
         try:
-            self.initDongle(1,self.frequency)
+            self.initDongle(2,self.frequency)
         except (ChipconUsbTimeoutException):
             self.text.append('Timd out... try again later')
             return
