@@ -33,6 +33,7 @@ class Display(QWidget):
         self.initConnection()
     def initUI(self):
         self.fileName = "waves.txt"
+        self.FSK= True
         self.setFixedSize(1100, 500)
         self.setWindowTitle('RF Spoofer')
         #label = QLabel('RF Spoofer')
@@ -289,7 +290,10 @@ class Display(QWidget):
         if numOfDongles==1:
             self.dongle= RfCat()
             self.dongle.setFreq(freq)
-            self.dongle.setMdmModulation(MOD_2FSK)
+            if self.FSK == true:
+                self.dongle.setMdmModulation(MOD_2FSK)
+            else:
+                self.dongle.setMdmModulation(MOD_ASK_OOK)
             self.dongle.setMdmDRate(baudRate)
             self.dongle.setMaxPower()
             self.dongle.lowball(1)
@@ -300,7 +304,10 @@ class Display(QWidget):
                 #Listen Dongle
                 self.dongle= RfCat(idx=0)
                 self.dongle.setFreq(freq)
-                self.dongle.setMdmModulation(MOD_2FSK)
+                if self.FSK == True:
+                    self.dongle.setMdmModulation(MOD_2FSK)
+                else:
+                    self.dongle.setMdmModulation(MOD_ASK_OOK)
                 self.dongle.setMdmDRate(baudRate)
                 self.dongle.setMaxPower()
                 self.dongle.lowball(1)
@@ -491,7 +498,7 @@ class Display(QWidget):
 
         self.text.append(msg + "starting jam stop Ready")
         try:
-            QtCore.QMetaObject.invokeMethod(self.objJam, 'stopJam', Qt.DirectConnection)
+            QtCore.QMetaObject.invokeMethod(self.objJam, 'finishJam', Qt.DirectConnection)
         #Thread didn't start, therefore object does not exist
         except(AttributeError):
             pass
@@ -541,16 +548,18 @@ class Display(QWidget):
         #self.resetDongle(self.frequency)
 
     def radioButtonState(self,b):
-        msg = b.text() + " is selected"
+        #msg = b.text() + " is selected"
         #self.text.append(msg)
         if b.text() == "2FSK":
             if b.isChecked() == True:
+                self.FSK = True
                 self.text.append(b.text()+" modulation is selected")
             else:
                 pass
                 #self.text.append(b.text()+" is deselected")
         if b.text() == "ASK":
             if b.isChecked() == True:
+                self.FSK=False
                 self.text.append(b.text()+" modulation is selected")
             else:
                 pass
