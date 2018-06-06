@@ -1,3 +1,19 @@
+"""---------------------------------------------------------------------------------------
+--      SOURCE FILE:        transmitworker.py - transmission worker
+--
+--      PROGRAM:            RFSpoofer
+--
+--
+--      DATE:               May 14, 2018
+--
+--      DESIGNERS:          Thomas Yu
+--
+--      PROGRAMMERS:        Thomas Yu
+--
+--      NOTES:
+--      This file is responsible for sending transmissions. This class is
+--      started as a thread from rfspoofer.py
+---------------------------------------------------------------------------------------"""
     # worker.py
 from PyQt5.QtCore import QThread, QObject, pyqtSignal, pyqtSlot
 from PyQt5 import QtCore
@@ -16,7 +32,6 @@ class TransmitWorker(QObject, RfCat):
     messageReady = pyqtSignal(str)
     @pyqtSlot()
     def procTransmit(self): # A slot takes no params
-        #self.dongle.setRfMode(RFST_SRX)
         self.isRunning = True
         try:
             for index, transmit in enumerate(self.rawCapture):
@@ -32,9 +47,6 @@ class TransmitWorker(QObject, RfCat):
             print("finished sending")
             self.dongle.setModeIDLE()
         print("finished sending")
-        #self.dongle.setModeIDLE()
-        #self.dongle.setRfMode(RFST_SRX)
-        #self.dongle.setRfMode(RFST_SRX)
         self.finished.emit()
 
 
