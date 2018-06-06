@@ -1,4 +1,22 @@
 #!/usr/bin/env
+
+"""---------------------------------------------------------------------------------------
+--      SOURCE FILE:        rfspoofer.py - UI Code for the RFSpoofer
+--
+--      PROGRAM:            RFSpoofer
+--
+--
+--      DATE:               May 14, 2018
+--
+--      DESIGNERS:          Thomas Yu
+--
+--      PROGRAMMERS:        Thomas Yu
+--
+--      NOTES:
+--      This program spoofs the radio frequencies used in remote keyless entry systems
+--      found in modern day vehicles.
+---------------------------------------------------------------------------------------"""
+
 import sys
 import os
 from PyQt5.QtWidgets import *
@@ -19,7 +37,6 @@ from rflib import *
 
 #Globals
 #Default Values
-#frequency = 314350000
 baudRate = 4800
 FSK2 = "MOD_2FSK"
 chanWidth = 24000
@@ -101,9 +118,6 @@ class Display(QWidget):
         self.BaudLine.setFixedWidth(100)
 
 
-        #self.dlg.setFilter("*.txt")
-        #self.filenames = QStringList()
-
         self.fileLineEdit = QLineEdit("Please Select File")
         #self.fileLineEdit.setFixedWidth(100)
         self.fileButton = QPushButton("Select File")
@@ -118,9 +132,6 @@ class Display(QWidget):
         layout.addWidget(self.frequencyLine,0,6)
         layout.addWidget(self.baudLabel,1,5)
         layout.addWidget(self.BaudLine,1,6)
-
-        #layout.addRow(self.frequencyLabel,self.frequencyLine)
-
 
         self.text = QTextEdit()
         self.text.setReadOnly(True)
@@ -139,12 +150,6 @@ class Display(QWidget):
         layout.addWidget(self.UploadButton, 18,6)
         layout.addWidget(self.BruteButton, 19,6)
 
-
-        #layout.setColumnStretch(0, 1)
-        #layout.setColumnStretch(1, 3)
-        #layout.setRowStretch(0, 3)
-        #layout.setRowStretch(1, 1)
-        #layout.setAlignment(Qt.AlignRight)
         self.setLayout(layout)
 
     def initConnection(self):
@@ -156,15 +161,8 @@ class Display(QWidget):
         fileTransmits = getFromFile(self.fileName)
         for transmits in fileTransmits:
             print(transmits)
-
         insertTransmission(self.transmissions,fileTransmits)
-        '''
-        rawTransmits = []
-        for transmit in fileTransmits:
-            rawTransmits.append(transmit[1].rstrip())
-            #print(transmit[1].rstrip())
-        '''
-        pass
+
     def handleButtonBrute(self):
         self.bruteObj = bruteworker.BruteWorker(self.dongle)
         self.thread = QThread()
@@ -176,9 +174,6 @@ class Display(QWidget):
         self.thread.started.connect(self.bruteObj.procTransmit)
         self.thread.start()
         self.text.append("starting brute force...")
-
-
-        pass
 
 
     def handleButtonDataSend(self):
@@ -208,8 +203,6 @@ class Display(QWidget):
         rawTransmits = []
         for transmit in fileTransmits:
             rawTransmits.append(transmit[1].rstrip())
-            #print(transmit[1].rstrip())
-
 
         self.repObj = transmitworker.TransmitWorker(self.dongle, rawTransmits)
         self.thread = QThread()
@@ -319,10 +312,8 @@ class Display(QWidget):
                 #print(str(e))
                 self.text.append("Error in setting up usb1")
                 self.text.append(str(e))
-                #print ('index out of range')
                 pass
 
-                #time.sleep(2)
             try:
                 #Jam dongle
                 jamFreq = freq - 400000
@@ -338,10 +329,8 @@ class Display(QWidget):
                 self.dongle2.makePktFLEN(255)
                 self.dongle2.setChannel(0)
             except Exception as e :
-                #print(str(e))
                 self.text.append("error in setting up usb2")
                 self.text.append(str(e))
-                #print ('index out of range')
                 pass
 
 
@@ -371,13 +360,10 @@ class Display(QWidget):
                 self.dongle.makePktFLEN(255)
                 self.dongle.setChannel(0)
             except Exception as e :
-                #print(str(e))
                 self.text.append("Error in setting up usb1")
                 self.text.append(str(e))
-                #print ('index out of range')
                 pass
 
-                #time.sleep(2)
             try:
                 #Jam dongle
                 jamFreq = freq - 400000
@@ -385,7 +371,6 @@ class Display(QWidget):
                 self.dongle2.setFreq(jamFreq)
                 self.dongle2.setMdmModulation(MOD_2FSK)
                 self.dongle2.setMdmDRate(baudRate)
-                #self.dongle2.setMaxPower()
                 self.dongle2.setPower(50)
                 self.dongle2.lowball(1)
                 self.dongle2.setMdmChanBW(chanBW)
@@ -393,10 +378,8 @@ class Display(QWidget):
                 self.dongle2.makePktFLEN(255)
                 self.dongle2.setChannel(0)
             except Exception as e :
-                #print(str(e))
                 self.text.append("error in setting up usb2")
                 self.text.append(str(e))
-                #print ('index out of range')
                 pass
 
     def handleButtonRolling(self):
@@ -432,10 +415,6 @@ class Display(QWidget):
 
     #Thread handle
     def handleButtonListen(self):
-        #t1 = threading.Thread(target=self.listenThreadWorker)
-        #t1.start()
-
-
         self.obj = listenerworker.ListenerWorker(self.dongle)
         self.thread = QThread()
 
@@ -448,9 +427,6 @@ class Display(QWidget):
         self.thread.started.connect(self.obj.procListen)
         self.thread.start()
         self.text.append("starting listener")
-
-
-
 
 
     def handleButtonJam(self):
@@ -473,13 +449,11 @@ class Display(QWidget):
 
     def rollingStopJamming(self,msg):
         self.text.append("Stopping jamming....")
-        #self.saveToFile(self.fileName,msg)
         try:
             QtCore.QMetaObject.invokeMethod(self.objJam, 'stopJam', Qt.DirectConnection)
         #Thread didn't start, therefore object does not exist
         except(AttributeError):
             pass
-        #self.allowListening = False
 
     def jamStartReady(self,msg):
         print("starting jam again")
@@ -490,7 +464,6 @@ class Display(QWidget):
         #Thread didn't start, therefore object does not exist
         except(AttributeError):
             pass
-        #self.allowListening = False
 
 
     def jamStopReady(self,msg):
@@ -502,12 +475,9 @@ class Display(QWidget):
         #Thread didn't start, therefore object does not exist
         except(AttributeError):
             pass
-        #self.allowListening = False
-
 
     def onMessageReady(self, msg):
         self.text.append(msg)
-        #self.saveToFile(self.fileName,msg)
 
     def onSaveReady(self,msg):
         self.saveToFile(self.fileName,msg)
@@ -548,8 +518,6 @@ class Display(QWidget):
         #self.resetDongle(self.frequency)
 
     def radioButtonState(self,b):
-        #msg = b.text() + " is selected"
-        #self.text.append(msg)
         if b.text() == "2FSK":
             if b.isChecked() == True:
                 self.FSK = True
@@ -582,7 +550,6 @@ class Display(QWidget):
         file.write(data)
 
 if __name__ == '__main__':
-
     app = QApplication(sys.argv)
     ui = Display()
     ui.show()
