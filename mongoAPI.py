@@ -1,3 +1,18 @@
+"""---------------------------------------------------------------------------------------
+--      SOURCE FILE:        mongoAPI.py - mongodb API used
+--
+--      PROGRAM:            RFSpoofer
+--
+--
+--      DATE:               May 14, 2018
+--
+--      DESIGNERS:          Thomas Yu
+--
+--      PROGRAMMERS:        Thomas Yu
+--
+--      NOTES:
+--      This file contains the api for mongodb calls used by the rfspoofer
+---------------------------------------------------------------------------------------"""
 from pymongo import MongoClient
 # pprint library is used to make the output look more pretty
 from pprint import pprint
@@ -9,13 +24,8 @@ def getFromFile(fileName):
     with open(fileName) as f:
         for line in f:
             line=line.split(',')
-
             mytransmits.append(line)
     return mytransmits
-'''
-    for val in mytransmits:
-        print(val[1].rstrip())
-'''
 
 def initConnection():
     client = MongoClient('mongodb://admin:admin@ds241019.mlab.com:41019/practicum')
@@ -43,7 +53,6 @@ def getTransmissions(collection, id):
     tData = []
     results = collection.find( { "idnum":id},{"tData":1,"_id":0})
 
-
     for res in results:
         tData.append(res['tData'])
 
@@ -52,14 +61,4 @@ def getTransmissions(collection, id):
 
 def getAllTransmissions(collection):
     results = collection.find({})
-    #for val in results:
-    #   print (val["tData"])
     return results
-
-
-'''
-collection = initConnection()
-transmits = getFromFile("waves.txt")
-insertTransmission(collection,transmits)
-getTransmissions(collection,6)
-'''
