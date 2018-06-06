@@ -1,3 +1,19 @@
+"""---------------------------------------------------------------------------------------
+--      SOURCE FILE:        rollingworker.py - rolling code attacker worker
+--
+--      PROGRAM:            RFSpoofer
+--
+--
+--      DATE:               May 14, 2018
+--
+--      DESIGNERS:          Thomas Yu
+--
+--      PROGRAMMERS:        Thomas Yu
+--
+--      NOTES:
+--      This file is responsible for listening, sending, and signaling the
+--      jam worker. This class is started as a thread from rfspoofer.py
+---------------------------------------------------------------------------------------"""
     # worker.py
 from PyQt5.QtCore import QThread, QObject, pyqtSignal, pyqtSlot
 from PyQt5 import QtCore
@@ -22,7 +38,6 @@ class RollingWorker(QObject, RfCat):
         self.Listening = True
         capturedPackets = []
         pktcounter = 1
-        #self.messageReady.emit("Listening...\n")
         while self.Listening:
             try:
                 rawdata, t = self.dongle.RFrecv(1)
@@ -37,9 +52,6 @@ class RollingWorker(QObject, RfCat):
                     saveMsg = str(pktcounter) + ', ' + str(hexdata) + os.linesep
                     self.saveReady.emit(saveMsg)
                     pktcounter+=1
-
-                #Force update GUI
-                #app.processEvents()
                     if pktcounter > 2:
                         time.sleep(0.5)
                         self.jamStop.emit("")
