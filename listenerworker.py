@@ -1,3 +1,19 @@
+"""---------------------------------------------------------------------------------------
+--      SOURCE FILE:        listenworker.py - listener worker
+--
+--      PROGRAM:            RFSpoofer
+--
+--
+--      DATE:               May 14, 2018
+--
+--      DESIGNERS:          Thomas Yu
+--
+--      PROGRAMMERS:        Thomas Yu
+--
+--      NOTES:
+--      This file is responsible for listening for transmissions emitted. note
+--      that this class is started as a thread from rfspoofer.py
+---------------------------------------------------------------------------------------"""
     # worker.py
 from PyQt5.QtCore import QThread, QObject, pyqtSignal, pyqtSlot
 from PyQt5 import QtCore
@@ -34,15 +50,12 @@ class ListenerWorker(QObject, RfCat):
                     self.messageReady.emit(msg)
                     saveMsg = str(pktcounter) + ', ' + str(hexdata) + os.linesep
                     self.saveReady.emit(saveMsg)
-                #Force update GUI
-                #app.processEvents()
 
             except (KeyboardInterrupt):
                 break
             except (ChipconUsbTimeoutException):
                 pass
         print("finished")
-        #self.dongle.setModeIDLE()
         self.dongle.setModeRX()
         self.finished.emit()
 
