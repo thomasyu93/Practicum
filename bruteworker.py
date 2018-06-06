@@ -1,3 +1,19 @@
+"""---------------------------------------------------------------------------------------
+--      SOURCE FILE:        bruteworker.py - bruteforce worker
+--
+--      PROGRAM:            RFSpoofer
+--
+--
+--      DATE:               May 14, 2018
+--
+--      DESIGNERS:          Thomas Yu
+--
+--      PROGRAMMERS:        Thomas Yu
+--
+--      NOTES:
+--      This file is responsible for brute force transmitting transmissions. note
+--      that this class is started as a thread from rfspoofer.py
+---------------------------------------------------------------------------------------"""
 # worker.py
 from PyQt5.QtCore import QThread, QObject, pyqtSignal, pyqtSlot
 from PyQt5 import QtCore
